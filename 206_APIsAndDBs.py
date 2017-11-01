@@ -69,20 +69,19 @@ def get_user_tweets(user):
 	if user_identifier in CACHE_DICTION:
 		results = CACHE_DICTION[user_identifier]
 	else:
+
+		#gets last 20 texts of specified user
 		results = api.user_timeline(screen_name = user_name, count = 20)
 
-
-		#timeline = results['text']
-
-		#print (timeline)
 		CACHE_DICTION[user_identifier] = results
+		#print (results[0])
+
 		f = open(CACHE_FNAME, "w")
 		#updates the json file with whatever is in CACHE_DICTION
 		f.write(json.dumps(CACHE_DICTION))
 		f.close
 
-		#print (CACHE_DICTION)
-		return results
+	return results
 
 
 
