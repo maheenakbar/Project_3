@@ -59,23 +59,19 @@ except:
     CACHE_DICTION = {}
 
 
-
 # Define your function get_user_tweets here:
 
 def get_user_tweets(user):
 	user_name = user[1:]
-	user_identifier = "twitter_{}".format(user_name)
+	#user_identifier = "twitter_{}".format(user_name)
 
-	if user_identifier in CACHE_DICTION:
-		results = CACHE_DICTION[user_identifier]
+	if user_name in CACHE_DICTION:
+		results = CACHE_DICTION[user_name]
 	else:
 
 		#gets last 20 texts of specified user
 		results = api.user_timeline(screen_name = user_name, count = 20)
-
-		CACHE_DICTION[user_identifier] = results
-		#print (results[0])
-
+		CACHE_DICTION[user_name] = results
 		f = open(CACHE_FNAME, "w")
 		#updates the json file with whatever is in CACHE_DICTION
 		f.write(json.dumps(CACHE_DICTION))
@@ -92,8 +88,6 @@ def get_user_tweets(user):
 umich_tweets = get_user_tweets("@umich")
 
 
-
-
 ## Task 2 - Creating database and loading data into database
 ## You should load into the Users table:
 # The umich user, and all of the data about users that are mentioned 
@@ -102,6 +96,52 @@ umich_tweets = get_user_tweets("@umich")
 # mentioned in the umich timeline, that Twitter user's info should be 
 # in the Users table, etc.
 
+conn = sqlite3.connect('206_APIsAndDBs.sqlite')
+cur = conn.cursor()
+
+cur.execute('DROP TABLE IF EXISTS Users')
+cur.execute('CREATE TABLE Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs NUMBER, description TEXT)')
+
+#creates the tuple of the necessary information of the user to be inserted into the Users table
+user_tup = umich_tweets[0]['user']['id_str'], umich_tweets[0]['user']['screen_name'], umich_tweets[0]['user']['favourites_count'], umich_tweets[0]['user']['description']
+
+cur.execute('SELECT screen_name FROM Users WHERE user_id = ? LIMIT 1', (umich_tweets[0]['user']['id_str'], ) )
+
+#this try except block checks to see if the user has already been inserted into this table to avoid duplicates
+try:
+	id_user = cur.fetchone()[0]
+except:
+	#if this id is not found, insert this row into the table
+	cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', user_tup)
+	conn.commit()
+
+for tweet in umich_tweets:
+	for user_men in tweet['entities']['user_mentions']:
+		mention_info = api.get_user(user_men['screen_name'])
+		#this creates the tuples of the users that are mentioned in the original user's tweets
+		mention_tup = mention_info['id_str'], mention_info['screen_name'], mention_info['favourites_count'], mention_info['description']
+		cur.execute('SELECT screen_name FROM Users WHERE user_id = ? LIMIT 1', (mention_info['id_str'],))
+		try:
+			id_mention = cur.fetchone()[0]
+		except:
+			#if the id is not found, insert this row into the table
+			cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', mention_tup)
+			conn.commit()
+
+cur.execute('DROP TABLE IF EXISTS Tweets')
+cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, text TEXT, user_posted TEXT, time_posted TIMESTAMP, retweets NUMBER)')
+
+'''for tweet in umich_tweets:
+	tweet_tup = tweet['id_str'], tweet['text'], tweet['user']['id_str'], tweet['created_at'], tweet['retweet_count']
+	cur.execute('SELECT text FROM Users WHERE tweet_id = ? LIMIT 1', (tweet['id_str'],))
+	try:
+		text_id = cur.fetchone()[0]
+	except:
+		cur.execute('INSERT INTO Tweets (tweet_id, text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tweet_tup)
+		conn.commit()'''
+
+
+cur.close()
 
 
 ## You should load into the Tweets table: 
