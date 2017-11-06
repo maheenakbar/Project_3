@@ -14,11 +14,12 @@ import unittest
 import itertools
 import collections
 import tweepy
-import twitter_info # same deal as always...
+import twitter_info 
 import json
 import sqlite3
+import datetime
 
-## Your name:
+## Your name: Maheen Khan
 ## The names of anyone you worked with on this project:
 
 #####
@@ -129,16 +130,25 @@ for tweet in umich_tweets:
 			conn.commit()
 
 cur.execute('DROP TABLE IF EXISTS Tweets')
-cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, text TEXT, user_posted TEXT, time_posted TIMESTAMP, retweets NUMBER)')
+cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, text TEXT, user_posted TEXT, time_posted DATETIME, retweets NUMBER)')
 
-'''for tweet in umich_tweets:
-	tweet_tup = tweet['id_str'], tweet['text'], tweet['user']['id_str'], tweet['created_at'], tweet['retweet_count']
-	cur.execute('SELECT text FROM Users WHERE tweet_id = ? LIMIT 1', (tweet['id_str'],))
+
+#Tweets table stuff
+for tweet in umich_tweets:
+	#creates tuple of the tweet information
+	created_at_list = tweet['created_at'].split()
+	time_list = created_at_list[3].split(':')
+	time_created = datetime.time(int(time_list[0]), int(time_list[1]), int(time_list[2]))
+	print(time_created)
+
+	tweet_tup = tweet['id_str'], tweet['text'], tweet['user']['id_str'], str(time_created), tweet['retweet_count']
+	print(tweet_tup)
+	cur.execute('SELECT user_posted FROM Tweets WHERE tweet_id = ? LIMIT 1', (tweet['id_str'],))
 	try:
 		text_id = cur.fetchone()[0]
 	except:
 		cur.execute('INSERT INTO Tweets (tweet_id, text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tweet_tup)
-		conn.commit()'''
+		conn.commit()
 
 
 cur.close()
