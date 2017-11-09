@@ -135,14 +135,13 @@ cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, text TEXT, user_pos
 
 #Tweets table stuff
 for tweet in umich_tweets:
-	#creates tuple of the tweet information
+	
 	created_at_list = tweet['created_at'].split()
 	time_list = created_at_list[3].split(':')
 	time_created = datetime.time(int(time_list[0]), int(time_list[1]), int(time_list[2]))
-	print(time_created)
 
+    #creates tuple of the tweet information
 	tweet_tup = tweet['id_str'], tweet['text'], tweet['user']['id_str'], str(time_created), tweet['retweet_count']
-	print(tweet_tup)
 	cur.execute('SELECT user_posted FROM Tweets WHERE tweet_id = ? LIMIT 1', (tweet['id_str'],))
 	try:
 		text_id = cur.fetchone()[0]
@@ -151,7 +150,7 @@ for tweet in umich_tweets:
 		conn.commit()
 
 
-cur.close()
+
 
 
 ## You should load into the Tweets table: 
@@ -178,28 +177,38 @@ cur.close()
 
 # Make a query to select all of the records in the Users database. 
 # Save the list of tuples in a variable called users_info.
+cur.execute('SELECT * FROM Users')
 
-users_info = True
+users_info = cur.fetchall()
+
 
 # Make a query to select all of the user screen names from the database. 
 # Save a resulting list of strings (NOT tuples, the strings inside them!) 
 # in the variable screen_names. HINT: a list comprehension will make 
 # this easier to complete! 
-screen_names = True
-
+cur.execute('SELECT screen_name FROM Users')
+screen_names = []
+screen_names_tup = cur.fetchall()
+for item in screen_names_tup:
+	screen_names.append(item[0])
 
 # Make a query to select all of the tweets (full rows of tweet information)
 # that have been retweeted more than 10 times. Save the result 
 # (a list of tuples, or an empty list) in a variable called retweets.
-retweets = True
+cur.execute('SELECT * FROM Tweets WHERE retweets > 10')
+retweets = cur.fetchall()
 
 
 # Make a query to select all the descriptions (descriptions only) of 
 # the users who have favorited more than 500 tweets. Access all those 
 # strings, and save them in a variable called favorites, 
 # which should ultimately be a list of strings.
-favorites = True
+cur.execute('SELECT description FROM Users WHERE num_favs > 500')
+favorites_tup = cur.fetchall()
 
+favorites = []
+for item in favorites_tup:
+	favorites.append(item[0])
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
@@ -212,6 +221,8 @@ joined_data = True
 # list of tuples in a variable called joined_data2.
 
 joined_data2 = True
+
+cur.close()
 
 
 ### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END 
