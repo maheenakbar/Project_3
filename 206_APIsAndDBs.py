@@ -61,6 +61,8 @@ except:
 
 
 # Define your function get_user_tweets here:
+# The expected input is a string that is a username of someone on Twitter.
+# The expected output is a list of the data from the user on Twitter
 
 def get_user_tweets(user):
 	#gets rid of '@' symbol in username
@@ -85,7 +87,6 @@ def get_user_tweets(user):
 # Write an invocation to the function for the "umich" user timeline and 
 # save the result in a variable called umich_tweets:
 
-
 umich_tweets = get_user_tweets("@umich")
 
 
@@ -106,6 +107,7 @@ cur.execute('CREATE TABLE Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num
 #creates the tuple of the necessary information of the user to be inserted into the Users table
 user_tup = umich_tweets[0]['user']['id_str'], umich_tweets[0]['user']['screen_name'], umich_tweets[0]['user']['favourites_count'], umich_tweets[0]['user']['description']
 
+#this line is to try and select a certain user_id from the table --> if it's there, we don't add the row to the table because it's already in it
 cur.execute('SELECT screen_name FROM Users WHERE user_id = ? LIMIT 1', (umich_tweets[0]['user']['id_str'], ) )
 
 #this try except block checks to see if the user has already been inserted into this table to avoid duplicates
@@ -139,6 +141,7 @@ for tweet in umich_tweets:
     #creates tuple of the tweet information
 	tweet_tup = tweet['id_str'], tweet['text'], tweet['user']['id_str'], tweet['created_at'], tweet['retweet_count']
 	cur.execute('SELECT user_posted FROM Tweets WHERE tweet_id = ? LIMIT 1', (tweet['id_str'],))
+	#this try except block also checks for duplicates in Tweets table
 	try:
 		text_id = cur.fetchone()[0]
 	except:
