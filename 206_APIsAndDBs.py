@@ -63,8 +63,8 @@ except:
 # Define your function get_user_tweets here:
 
 def get_user_tweets(user):
+	#gets rid of '@' symbol in username
 	user_name = user[1:]
-	#user_identifier = "twitter_{}".format(user_name)
 
 	if user_name in CACHE_DICTION:
 		results = CACHE_DICTION[user_name]
@@ -129,16 +129,12 @@ for tweet in umich_tweets:
 			cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', mention_tup)
 			conn.commit()
 
+
 cur.execute('DROP TABLE IF EXISTS Tweets')
 cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, text TEXT, user_posted TEXT, time_posted DATETIME, retweets NUMBER)')
 
-
 #Tweets table stuff
 for tweet in umich_tweets:
-	
-	'''created_at_list = tweet['created_at'].split()
-	time_list = created_at_list[3].split(':')
-	time_created = datetime.time(int(time_list[0]), int(time_list[1]), int(time_list[2]))'''
 
     #creates tuple of the tweet information
 	tweet_tup = tweet['id_str'], tweet['text'], tweet['user']['id_str'], tweet['created_at'], tweet['retweet_count']
@@ -189,6 +185,8 @@ users_info = cur.fetchall()
 cur.execute('SELECT screen_name FROM Users')
 screen_names = []
 screen_names_tup = cur.fetchall()
+
+#puts individual strings from tuples into list
 for item in screen_names_tup:
 	screen_names.append(item[0])
 
@@ -207,20 +205,23 @@ cur.execute('SELECT description FROM Users WHERE num_favs > 500')
 favorites_tup = cur.fetchall()
 
 favorites = []
+
+#puts individual strings from tuples into list
 for item in favorites_tup:
 	favorites.append(item[0])
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
-# tweet. Save the resulting list of tuples in a variable called joined_data2.
-joined_data = True
+# tweet. Save the resulting list of tuples in a variable called joined_data.
+cur.execute('SELECT Users.screen_name, Tweets.text FROM Users INNER JOIN Tweets')
+joined_data = cur.fetchall()
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
 # tweet in descending order based on retweets. Save the resulting 
 # list of tuples in a variable called joined_data2.
-
-joined_data2 = True
+cur.execute('SELECT Users.screen_name, Tweets.text FROM Users INNER JOIN Tweets ORDER BY Tweets.retweets DESC')
+joined_data2 = cur.fetchall()
 
 cur.close()
 
