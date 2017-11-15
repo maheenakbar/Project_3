@@ -159,10 +159,6 @@ for tweet in umich_tweets:
 # the user_id column! See below hints.
 
 
-## HINT: There's a Tweepy method to get user info, so when you have a 
-## user id or screenname you can find alllll the info you want about 
-## the user.
-
 ## HINT: The users mentioned in each tweet are included in the tweet 
 ## dictionary -- you don't need to do any manipulation of the Tweet 
 ## text to find out which they are! Do some nested data investigation 
