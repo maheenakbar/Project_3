@@ -110,46 +110,54 @@ user_tup = umich_tweets[0]['user']['id_str'], umich_tweets[0]['user']['screen_na
 #this line is to try and select a certain user_id from the table --> if it's there, we don't add the row to the table because it's already in it
 cur.execute('SELECT screen_name FROM Users WHERE user_id = ? LIMIT 1', (umich_tweets[0]['user']['id_str'], ) )
 
-#this try except block checks to see if the user has already been inserted into this table to avoid duplicates
-try:
-	id_user = cur.fetchone()[0]
-except:
-	#if this id is not found, insert this row into the table
-	cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', user_tup)
-	conn.commit()
+# This function does not have any expected input. It just uses the tweet information to add
+# data to the Users table
+# It does not return anything, just modifies the Users table
+def add_data_users():
+	#this try except block checks to see if the user has already been inserted into this table to avoid duplicates
+	try:
+		id_user = cur.fetchone()[0]
+	except:
+		#if this id is not found, insert this row into the table
+		cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', user_tup)
+		conn.commit()
 
-for tweet in umich_tweets:
-	for user_men in tweet['entities']['user_mentions']:
-		mention_info = api.get_user(user_men['screen_name'])
-		#this creates the tuples of the users that are mentioned in the original user's tweets
-		mention_tup = mention_info['id_str'], mention_info['screen_name'], mention_info['favourites_count'], mention_info['description']
-		cur.execute('SELECT screen_name FROM Users WHERE user_id = ? LIMIT 1', (mention_info['id_str'],))
-		try:
-			id_mention = cur.fetchone()[0]
-		except:
-			#if the id is not found, insert this row into the table
-			cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', mention_tup)
-			conn.commit()
+	for tweet in umich_tweets:
+		for user_men in tweet['entities']['user_mentions']:
+			mention_info = api.get_user(user_men['screen_name'])
+			#this creates the tuples of the users that are mentioned in the original user's tweets
+			mention_tup = mention_info['id_str'], mention_info['screen_name'], mention_info['favourites_count'], mention_info['description']
+			cur.execute('SELECT screen_name FROM Users WHERE user_id = ? LIMIT 1', (mention_info['id_str'],))
+			try:
+				id_mention = cur.fetchone()[0]
+			except:
+				#if the id is not found, insert this row into the table
+				cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', mention_tup)
+				conn.commit()
 
+add_data_users()
 
 cur.execute('DROP TABLE IF EXISTS Tweets')
 cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY UNIQUE, text TEXT, user_posted TEXT, time_posted DATETIME, retweets NUMBER)')
 
-#Tweets table stuff
-for tweet in umich_tweets:
+# This function does not have any expected input. It just uses the tweet information to add
+# data to the Tweets table
+# It does not return anything, just modifies the Tweets table
+def add_data_tweets():
+	for tweet in umich_tweets:
 
-    #creates tuple of the tweet information
-	tweet_tup = tweet['id_str'], tweet['text'], tweet['user']['id_str'], tweet['created_at'], tweet['retweet_count']
-	cur.execute('SELECT user_posted FROM Tweets WHERE tweet_id = ? LIMIT 1', (tweet['id_str'],))
-	#this try except block also checks for duplicates in Tweets table
-	try:
-		text_id = cur.fetchone()[0]
-	except:
-		cur.execute('INSERT INTO Tweets (tweet_id, text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tweet_tup)
-		conn.commit()
+    	#creates tuple of the tweet information
+		tweet_tup = tweet['id_str'], tweet['text'], tweet['user']['id_str'], tweet['created_at'], tweet['retweet_count']
+		cur.execute('SELECT user_posted FROM Tweets WHERE tweet_id = ? LIMIT 1', (tweet['id_str'],))
+		#this try except block also checks for duplicates in Tweets table
+		try:
+			text_id = cur.fetchone()[0]
+		except:
+			cur.execute('INSERT INTO Tweets (tweet_id, text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tweet_tup)
+			conn.commit()
 
 
-
+add_data_tweets()
 
 
 ## You should load into the Tweets table: 
